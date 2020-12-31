@@ -1,17 +1,19 @@
-# /usr/bin/python
+#!/usr/bin/env python
+# coding: utf-8
 
-#####################################################################
+# In[2]:
+
+
 import os.path
-
 import numpy as N
-
 from netCDF4 import Dataset
-
 from scipy import optimize
-
 from pathlib import Path
+import sys
 
-##############################################################################################
+
+# In[3]:
+
 
 nx = 64
 ny = 36
@@ -30,52 +32,39 @@ day = N.arange(0., float(nw * 24.), 24. / nh, float)
 ######################################################################
 var = ['tem', 'zon', 'mer', 'ver', 'phi']
 #define ENSO months
-months=[ "Feb"] #"Dec", "Jan",
+months=[ "Jan"] #"Dec", "Feb",
 # define ENSO years
 el_year_ls = [1983, 1992, 1998, 2003, 2010]
 la_year_ls = [1989, 1999, 2000, 2008, 2011]
+root_path = '/home/gemeinsam_tmp/VACILT/latent_heat_output/'
+
+
+# In[4]:
+
 
 for enso in ['el','la']:
 
     if enso == "el":
         enso_years = el_year_ls
-    if enso == "la":
+    elif enso == "la":
         enso_years = la_year_ls
 
     k1w = N.zeros((len(var), len(enso_years), len(months), nz, ny, 4, 2), float)  # var,year,month,levs,lats,kwave,amp/pha
 
     for iv in range(len(var)):
-
-        for iy in range(len(enso_years)):
-
-            # # Get list of input files
-            root_path = Path('/projekt5/hochatm/muam_mstober/')
-            in_folders = [f for f in root_path.iterdir() if f.is_dir()]  # get all folder in root_path
-
-            # get ENSO directories
-            enso_in_folders = sorted(list(filter(lambda x: str(x)[-8:] in [f'{enso_years[iy]}_{mon}' for mon in months], in_folders)))
-
-            print(enso_in_folders)
-
+        for iy, year in enumerate(enso_years):            
             for im in range(len(months)):
-
                 # and particular input files
-                add_nc_suffix = lambda x: x / 'nc' / str('muam_' + months[im] + '360.nc')
-                enso_in_files = Path.joinpath(enso_in_folders[im],'nc/muam_' + months[im] + '360.nc')
-
-                print(enso_years[iy], months[im], var[iv], enso_in_files)
-
+                enso_in_files = f'{root_path}{year}/nc/muam_{months[im]}360.nc'
+                print(enso, var[iv], enso_in_files)
+                
                 nc_enso = Dataset(enso_in_files, 'r')
-
                 data = N.array(nc_enso.variables[var[iv]])
-
                 nc_enso.close()
 
                 #####################################################################
 
-                fitfunc = lambda p, s, c: p[0] + \
-                                          p[1] * s[:, 0, 0] + p[2] * c[:, 0, 0] + p[3] * s[:, 0, 1] + p[4] * c[:, 0, 1] + \
-                                          p[5] * s[:, 1, 0] + p[6] * c[:, 1, 0] + p[7] * s[:, 1, 1] + p[8] * c[:, 1, 1]
+                fitfunc = lambda p, s, c: p[0] +                                           p[1] * s[:, 0, 0] + p[2] * c[:, 0, 0] + p[3] * s[:, 0, 1] + p[4] * c[:, 0, 1] +                                           p[5] * s[:, 1, 0] + p[6] * c[:, 1, 0] + p[7] * s[:, 1, 1] + p[8] * c[:, 1, 1]
 
                 x = lon * N.pi / 180.
                 t = day * 2. * N.pi / float(nw * 24.)
@@ -112,21 +101,18 @@ for enso in ['el','la']:
                     p0 = [1., 1., 1., 1., 1., 1., 1., 1., 1.]  # Initial guess for the parameters
 
                     for z in range(nz):
-
                         for k in range(ny):
                             y = N.ravel(data[:, z, k, :])
 
                             errfunc = lambda p, s, c, y: fitfunc(p, s, c) - y  # Distance to the target function
 
                             p1, success = optimize.leastsq(errfunc, p0[:], args=(s, c, y))
-
                             # amplitude
                             k1w[iv, iy, im, z, k, kwave, 0] = N.sqrt(p1[1] * p1[1] + p1[2] * p1[2])
-
                             # phase
                             k1w[iv, iy, im, z, k, kwave, 1] = N.arctan2(p1[1], p1[2])  # zwischen -pi bis pi
-
-        out = Dataset('ensemble_tides_' + var[iv] + '_' + enso + '_Feb' + '.nc', 'w')
+                            
+        out = Dataset(f'ensemble_tides_{var[iv]}_{enso}_{months[im]}.nc', 'w')
         out.createDimension('lat', len(lat))
         out.createDimension('lev', len(lev))
         out.createDimension('yr', len(enso_years))
@@ -172,3 +158,6 @@ for enso in ['el','la']:
         v.units = 'rad'
 
         out.close()
+
+                
+
