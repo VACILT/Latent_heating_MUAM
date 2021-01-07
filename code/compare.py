@@ -158,7 +158,7 @@ elif sel_ave == 'pha':
     diff_clabel = 'diff [rad]'  
 
 
-# In[123]:
+# In[130]:
 
 
 plt.rcParams.update({'font.size': 20})
@@ -211,5 +211,5 @@ ax.set_title('Difference (with-without)')
 ax.grid(b=True, which='major', color='gray', linestyle='--')
 
 plt.suptitle(f'{sel_tide} comparison for {sel_month}', y=1.02)
-fig.savefig(f'{sel_tide}_comparison_{sel_var}_{sel_phase}_{sel_month}.pdf', bbox_inches='tight')
+fig.savefig(f'{sel_tide}{sel_ave}_comparison_{sel_var}_{sel_phase}_{sel_month}.pdf', bbox_inches='tight')
 
