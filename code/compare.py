@@ -26,7 +26,7 @@ ymajorLocator = MultipleLocator(20)
 xmajorLocator = MultipleLocator(30)
 
 
-# In[96]:
+# In[153]:
 
 
 def process(ds):
@@ -36,6 +36,7 @@ def process(ds):
     ds['lev'] = lev_grid
     ds['lev'].attrs['long_name'] = 'height'
     ds['lev'].attrs['units'] = 'km'
+
     return ds.mean('yr'), ds.std('yr')
 
 def phase_mean(x,y):
@@ -71,15 +72,15 @@ lev_grid = np.arange(1.421,160.,2.842,float)
 lat_grid = np.arange(-87.5,-87.5+5.*ny,5.,float)
 
 
-# In[59]:
+# In[144]:
 
 
-sel_var = 'tem'
+sel_var = 'ver'
 sel_month = 'Jan'
 sel_phase = 'el'
 
 
-# In[60]:
+# In[148]:
 
 
 infile = f'ensemble_tides_{sel_var}_{sel_phase}_{sel_month}.nc'
@@ -87,20 +88,22 @@ ds_wo_lh = xr.open_dataset(f'{root_path}muam_mstober/{infile}')
 ds_w_lh = xr.open_dataset(f'{root_path}latent_heat_output/{infile}')
 
 
-# In[121]:
+# In[133]:
 
 
 sel_tide = 'DT'
 sel_ave = 'amp'
 
 
-# In[122]:
+# In[154]:
 
 
 if sel_ave == 'amp':
     mean_wo_lh, std_wo_lh = process(ds_wo_lh[f'{sel_tide}_{sel_ave}'])
     mean_w_lh, std_w_lh = process(ds_w_lh[f'{sel_tide}_{sel_ave}'])
-    diff = mean_w_lh-mean_wo_lh
+    diff = mean_w_lh-mean_wo_lh   
+    
+        
 
     cmap=plt.get_cmap('Blues') #cmap with blue colors
     #make descrete areas in colorbar
@@ -128,8 +131,8 @@ if sel_ave == 'amp':
         clabel = 'meridional wind [m/s]'
     elif sel_var=='ver':
         dsig=0.2
-        bounds = np.arange(0,10.1,1) # colorbar range
-        lvls = np.arange(dsig,5,dsig)
+        bounds = np.arange(0,10.1,1)/100. # colorbar range
+        lvls = np.arange(dsig,5,dsig)/100.
         diff_clabel = 'diff [m/s]'
         clabel = 'vertical wind [m/s]'
     elif selvar=='phi':
@@ -158,7 +161,7 @@ elif sel_ave == 'pha':
     diff_clabel = 'diff [rad]'  
 
 
-# In[130]:
+# In[155]:
 
 
 plt.rcParams.update({'font.size': 20})
