@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[33]:
+# In[3]:
 
 
 import xarray as xr
@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 
 
-# In[72]:
+# In[4]:
 
 
 xr.set_options(keep_attrs = True) 
@@ -26,7 +26,7 @@ ymajorLocator = MultipleLocator(20)
 xmajorLocator = MultipleLocator(30)
 
 
-# In[153]:
+# In[5]:
 
 
 def process(ds):
@@ -60,7 +60,7 @@ def process_vec(ds, sel_tide):
     return phase_mean(x,y), x, y
 
 
-# In[3]:
+# In[6]:
 
 
 root_path = '/home/gemeinsam_tmp/VACILT/'
@@ -72,7 +72,7 @@ lev_grid = np.arange(1.421,160.,2.842,float)
 lat_grid = np.arange(-87.5,-87.5+5.*ny,5.,float)
 
 
-# In[144]:
+# In[7]:
 
 
 sel_var = 'ver'
@@ -80,7 +80,7 @@ sel_month = 'Jan'
 sel_phase = 'el'
 
 
-# In[148]:
+# In[8]:
 
 
 infile = f'ensemble_tides_{sel_var}_{sel_phase}_{sel_month}.nc'
@@ -88,14 +88,14 @@ ds_wo_lh = xr.open_dataset(f'{root_path}muam_mstober/{infile}')
 ds_w_lh = xr.open_dataset(f'{root_path}latent_heat_output/{infile}')
 
 
-# In[133]:
+# In[9]:
 
 
 sel_tide = 'DT'
-sel_ave = 'amp'
+sel_ave = 'pha'
 
 
-# In[154]:
+# In[10]:
 
 
 if sel_ave == 'amp':
@@ -149,9 +149,9 @@ if sel_ave == 'amp':
 elif sel_ave == 'pha':
     mean_wo_lh, x_wo_lh, y_wo_lh = process_vec(ds_wo_lh, sel_tide)
     mean_w_lh, x_w_lh, y_w_lh = process_vec(ds_w_lh, sel_tide)
-    diff_x = x_w_lh-x_wo_lh
-    diff_y = y_w_lh-y_wo_lh
-    diff = phase_mean(diff_x, diff_y)   
+    #diff_x = x_w_lh-x_wo_lh
+    #diff_y = y_w_lh-y_wo_lh
+    diff = mean_w_lh-mean_wo_lh#phase_mean(diff_x, diff_y)   
     
     cmap=plt.get_cmap('Reds')
     cmaplist=[cmap(i) for i in range(cmap.N)]
@@ -161,7 +161,7 @@ elif sel_ave == 'pha':
     diff_clabel = 'diff [rad]'  
 
 
-# In[155]:
+# In[38]:
 
 
 plt.rcParams.update({'font.size': 20})
@@ -206,13 +206,13 @@ p = diff.plot(ax = ax, robust = True,
 ax.text(0.6,0.1,'$\Delta_{max}$'+f'= {diff.max().values:2.3f}', 
         fontsize=13, backgroundcolor=(1, 1, 1, 0.5), transform=ax.transAxes)
 if sel_ave == 'pha':
-    p.colorbar.set_ticks(bounds)
-    p.colorbar.set_ticklabels((r'$-\pi$',r'$-\pi/2$', '0', r'$\pi/2$',r'$\pi$'))
+    p.colorbar.set_ticks(bounds/10.)
+    p.colorbar.set_ticklabels((r'$-\pi/10$',r'$-\pi/20$', '0', r'$\pi/20$',r'$\pi/10$'))
     
 ax.set_ylabel('')
 ax.set_title('Difference (with-without)')
 ax.grid(b=True, which='major', color='gray', linestyle='--')
 
 plt.suptitle(f'{sel_tide} comparison for {sel_month}', y=1.02)
-fig.savefig(f'{sel_tide}{sel_ave}_comparison_{sel_var}_{sel_phase}_{sel_month}.pdf', bbox_inches='tight')
+#fig.savefig(f'{sel_tide}{sel_ave}_comparison_{sel_var}_{sel_phase}_{sel_month}.pdf', bbox_inches='tight')
 
